@@ -45,6 +45,19 @@ This project uses AI coding assistance during development. Each bounded task is 
 - Human review: reviewed and approved
 - Result: completed
 
+## Step 5 — Evaluation Dataset
+
+- AI tool used: coding agent
+- Task: create initial evaluation dataset and dataset validation tests
+- Dataset: 30 cases
+- Files created:
+  - `data/eval_dataset.json`
+  - `tests/test_eval_dataset.py`
+- Validation tests executed: `python -m pytest -q`
+- Test result: passed
+- Human review status: AI-drafted and pending human review
+- Result: completed
+
 ## Future AI-Assisted Tasks
 
 Subsequent AI-assisted tasks will be appended to this log as they are completed.

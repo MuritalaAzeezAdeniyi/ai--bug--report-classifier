@@ -1,0 +1,362 @@
+[
+  {
+    "id": "BUG-001",
+    "input": "I enter the correct password but after clicking Sign In the page just keeps loading. It happens in prod after the last deploy.",
+    "expected": {
+      "category": "Authentication",
+      "severity": "High",
+      "priority": "P1",
+      "environment": "Production / Web",
+      "issue": "Login stays stuck loading after valid credentials are submitted.",
+      "reproduction_available": true
+    }
+  },
+  {
+    "id": "BUG-002",
+    "input": "User can log in, but when they hit the admin role screen they see a 403 even though they have the perm. This is in staging.",
+    "expected": {
+      "category": "Authorization",
+      "severity": "High",
+      "priority": "P1",
+      "environment": "Staging / Web",
+      "issue": "Users with valid admin access still receive permission errors on the roles screen.",
+      "reproduction_available": true
+    }
+  },
+  {
+    "id": "BUG-003",
+    "input": "POST /v1/invoices returns 500 when a valid payload is sent. This started after the API rollout and affects production.",
+    "expected": {
+      "category": "API",
+      "severity": "Critical",
+      "priority": "P0",
+      "environment": "Production / API",
+      "issue": "Invoice API requests fail with a server error for valid payloads.",
+      "reproduction_available": true
+    }
+  },
+  {
+    "id": "BUG-004",
+    "input": "The checkout button is greyed out after I add an item, even tho the cart is valid. Works in Chrome but not Safari, weird.",
+    "expected": {
+      "category": "UI",
+      "severity": "Medium",
+      "priority": "P2",
+      "environment": "Web / Chrome and Safari",
+      "issue": "Checkout button remains disabled after a valid cart update.",
+      "reproduction_available": true
+    }
+  },
+  {
+    "id": "BUG-005",
+    "input": "Order table gets stuck and the app stops responding when we run the daily report. Prod DB is lagging hard.",
+    "expected": {
+      "category": "Database",
+      "severity": "Critical",
+      "priority": "P0",
+      "environment": "Production / Database",
+      "issue": "Database load causes the application to stop responding during reporting jobs.",
+      "reproduction_available": true
+    }
+  },
+  {
+    "id": "BUG-006",
+    "input": "Dashboard is a bit slow sometimes. Not sure if it's just me but it feels bad after 3pm. Please fix if possible.",
+    "expected": {
+      "category": "Performance",
+      "severity": "Medium",
+      "priority": "P2",
+      "environment": null,
+      "issue": "Dashboard performance degrades intermittently during normal usage.",
+      "reproduction_available": false
+    }
+  },
+  {
+    "id": "BUG-007",
+    "input": "A user can reset a password with a token that already expired, then they get access to the account. This is a serious security issue.",
+    "expected": {
+      "category": "Security",
+      "severity": "Critical",
+      "priority": "P0",
+      "environment": "Production / API",
+      "issue": "Expired reset tokens can still grant access to user accounts.",
+      "reproduction_available": true
+    }
+  },
+  {
+    "id": "BUG-008",
+    "input": "When I try to submit my address, the app says it's invalid even though the ZIP is correct. It only happens on the shipping form.",
+    "expected": {
+      "category": "Validation",
+      "severity": "Medium",
+      "priority": "P2",
+      "environment": "Web",
+      "issue": "Shipping form rejects a valid address format.",
+      "reproduction_available": true
+    }
+  },
+  {
+    "id": "BUG-009",
+    "input": "The app is broken after the upgrade. Everybody says it is messed up somehow.",
+    "expected": {
+      "category": "Other",
+      "severity": "Low",
+      "priority": "P3",
+      "environment": null,
+      "issue": "General app instability follows the recent upgrade.",
+      "reproduction_available": false
+    }
+  },
+  {
+    "id": "BUG-010",
+    "input": "On Android, I tap sign in with my saved account and it says wrong password even though I am using the right one. Happens only on the mobile app.",
+    "expected": {
+      "category": "Authentication",
+      "severity": "Medium",
+      "priority": "P2",
+      "environment": "Android / Mobile App",
+      "issue": "Mobile app rejects valid saved credentials during sign-in.",
+      "reproduction_available": true
+    }
+  },
+  {
+    "id": "BUG-011",
+    "input": "The manager role stopped working for some users after the permission sync. Not sure if this is a config issue or a bug.",
+    "expected": {
+      "category": "Authorization",
+      "severity": "Medium",
+      "priority": "P2",
+      "environment": null,
+      "issue": "Some user accounts no longer receive the expected manager permissions after sync.",
+      "reproduction_available": false
+    }
+  },
+  {
+    "id": "BUG-012",
+    "input": "GET /reports/weekly returns a 502 when the date range is two months. It is reproducible with the same payload every time.",
+    "expected": {
+      "category": "API",
+      "severity": "High",
+      "priority": "P1",
+      "environment": "API / Production",
+      "issue": "Weekly reports endpoint fails with a 502 for longer date ranges.",
+      "reproduction_available": true
+    }
+  },
+  {
+    "id": "BUG-013",
+    "input": "The settings page is kinda busted on my tablet. I can open it, but it doesn't look right and some buttons are missing.",
+    "expected": {
+      "category": "UI",
+      "severity": "Low",
+      "priority": "P3",
+      "environment": null,
+      "issue": "Settings page layout is broken and some controls are missing on tablet devices.",
+      "reproduction_available": false
+    }
+  },
+  {
+    "id": "BUG-014",
+    "input": "Select a customer and click History. The report hangs for 30 seconds, then fails in staging. This is repeatable with our test tenant.",
+    "expected": {
+      "category": "Database",
+      "severity": "High",
+      "priority": "P1",
+      "environment": "Staging / Database",
+      "issue": "Customer history query hangs before returning results.",
+      "reproduction_available": true
+    }
+  },
+  {
+    "id": "BUG-015",
+    "input": "Search feels slow on the main page, especially during busy periods. Hard to tell if it is a server issue or just the browser.",
+    "expected": {
+      "category": "Performance",
+      "severity": "Medium",
+      "priority": "P2",
+      "environment": "Production",
+      "issue": "Search requests are noticeably slow during busy traffic periods.",
+      "reproduction_available": false
+    }
+  },
+  {
+    "id": "BUG-016",
+    "input": "User email reset token can be reused after it is marked invalid. Verified against a test account in prod.",
+    "expected": {
+      "category": "Security",
+      "severity": "Medium",
+      "priority": "P2",
+      "environment": "Production / Web",
+      "issue": "Invalidated reset tokens can still be used to access an account.",
+      "reproduction_available": true
+    }
+  },
+  {
+    "id": "BUG-017",
+    "input": "I enter a valid zip code and click save, but the billing form says it is invalid. It happens every time in web.",
+    "expected": {
+      "category": "Validation",
+      "severity": "Low",
+      "priority": "P3",
+      "environment": "Web",
+      "issue": "Billing form rejects a valid ZIP code value.",
+      "reproduction_available": true
+    }
+  },
+  {
+    "id": "BUG-018",
+    "input": "Something weird happened after deploy and some users started seeing odd behavior in the app. We cannot tell what triggered it.",
+    "expected": {
+      "category": "Other",
+      "severity": "High",
+      "priority": "P1",
+      "environment": null,
+      "issue": "Unclear post-deploy regression causing inconsistent user-visible behavior.",
+      "reproduction_available": false
+    }
+  },
+  {
+    "id": "BUG-019",
+    "input": "I can log in with a valid SSO account but my session disappears immediately after redirect. This affects users across the org and blocks access.",
+    "expected": {
+      "category": "Authentication",
+      "severity": "Critical",
+      "priority": "P0",
+      "environment": "Production / Web",
+      "issue": "Users lose their session immediately after SSO login redirects back to the application.",
+      "reproduction_available": true
+    }
+  },
+  {
+    "id": "BUG-020",
+    "input": "A few users cannot edit invoices after the role sync. Maybe the permissions script is wrong but nobody knows for sure.",
+    "expected": {
+      "category": "Authorization",
+      "severity": "Low",
+      "priority": "P3",
+      "environment": null,
+      "issue": "Some users cannot edit invoices after the role permission sync.",
+      "reproduction_available": false
+    }
+  },
+  {
+    "id": "BUG-021",
+    "input": "The app sometimes returns partial JSON for the user profile endpoint. It is not consistent and feature teams are complaining.",
+    "expected": {
+      "category": "API",
+      "severity": "Medium",
+      "priority": "P2",
+      "environment": "Android / API",
+      "issue": "User profile endpoint intermittently returns incomplete JSON payloads.",
+      "reproduction_available": false
+    }
+  },
+  {
+    "id": "BUG-022",
+    "input": "On iOS, the checkout step crashes right after tapping Place Order. It happens every time with a valid cart and we have a repro video.",
+    "expected": {
+      "category": "UI",
+      "severity": "Critical",
+      "priority": "P0",
+      "environment": "Production / iOS",
+      "issue": "Checkout crashes on iOS when the user submits a valid order.",
+      "reproduction_available": true
+    }
+  },
+  {
+    "id": "BUG-023",
+    "input": "The reports query is timing out in prod and some jobs fail, but no one can say exactly when. Based on the logs it seems database related.",
+    "expected": {
+      "category": "Database",
+      "severity": "Low",
+      "priority": "P3",
+      "environment": "Production",
+      "issue": "Database-backed reports intermittently time out in production.",
+      "reproduction_available": false
+    }
+  },
+  {
+    "id": "BUG-024",
+    "input": "The analytics page is nearly unusable during peak load. CPU spikes and the page takes 20s to draw. Repro is easy with a large dataset.",
+    "expected": {
+      "category": "Performance",
+      "severity": "Critical",
+      "priority": "P0",
+      "environment": "Production / Web",
+      "issue": "Analytics page becomes unusable under peak load due to severe rendering delays.",
+      "reproduction_available": true
+    }
+  },
+  {
+    "id": "BUG-025",
+    "input": "Some admin users can still access account data after a session timeout. This seems serious but not all cases are clear.",
+    "expected": {
+      "category": "Security",
+      "severity": "Low",
+      "priority": "P3",
+      "environment": null,
+      "issue": "Some users may retain access to account data after session expiration.",
+      "reproduction_available": false
+    }
+  },
+  {
+    "id": "BUG-026",
+    "input": "The password reset form rejects a valid new password because it says the minimum length is 12 but we entered 12 and it still failed. Repro steps attached.",
+    "expected": {
+      "category": "Validation",
+      "severity": "Critical",
+      "priority": "P0",
+      "environment": "Web",
+      "issue": "Password reset validation rejects a valid password at the minimum length threshold.",
+      "reproduction_available": true
+    }
+  },
+  {
+    "id": "BUG-027",
+    "input": "After deploy the new dashboard looks wrong for one customer and the top nav overlaps. We have one screenshot but no clear steps.",
+    "expected": {
+      "category": "Other",
+      "severity": "Medium",
+      "priority": "P2",
+      "environment": "Production / Web",
+      "issue": "Dashboard layout is misrendered for one customer after the deploy.",
+      "reproduction_available": true
+    }
+  },
+  {
+    "id": "BUG-028",
+    "input": "signin on windows keeps failing for my account and it says invalid creds even when I copied the password correctly. Might be cache issue.",
+    "expected": {
+      "category": "Authentication",
+      "severity": "Low",
+      "priority": "P3",
+      "environment": "Windows / Web",
+      "issue": "Windows user sign-in incorrectly reports invalid credentials despite a correct password.",
+      "reproduction_available": false
+    }
+  },
+  {
+    "id": "BUG-029",
+    "input": "The file upload dropzone freezes after I select a file, and the submit button never re-enables. Happens every time in Chrome on Linux.",
+    "expected": {
+      "category": "UI",
+      "severity": "High",
+      "priority": "P1",
+      "environment": "Linux / Chrome / Web",
+      "issue": "Upload dropzone freezes and never re-enables after a file is selected.",
+      "reproduction_available": true
+    }
+  },
+  {
+    "id": "BUG-030",
+    "input": "A customer report is missing from the daily export. We can reproduce it by running the export job twice in staging with the same date range.",
+    "expected": {
+      "category": "Database",
+      "severity": "Medium",
+      "priority": "P2",
+      "environment": "Staging / Database",
+      "issue": "Daily export omits a customer report when the export job is run repeatedly.",
+      "reproduction_available": true
+    }
+  }
+]
