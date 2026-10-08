@@ -76,6 +76,45 @@ This project uses AI coding assistance during development. Each bounded task is 
 - The evaluation dataset was not modified.
 - Result: completed
 
+## Step 7 — LLM Client Abstraction
+
+- AI tool used: coding agent
+- Task: create the provider-agnostic LLM client abstraction and validation tests
+- Files created/modified:
+  - `app/llm_client.py`
+  - `tests/test_llm_client.py`
+  - `AI_USAGE_LOG.md`
+- What was implemented: a lightweight `LLMClient` abstraction with environment-driven configuration, provider validation, and explicit configuration errors for missing values and unsupported providers.
+- Configuration approach: environment variables `LLM_PROVIDER`, `LLM_MODEL`, and `LLM_API_KEY` are validated at construction time without hardcoded secrets.
+- Provider abstraction approach: the public interface is intentionally provider-independent and suitable for later structured JSON/Pydantic output handling, without vendor-specific SDK calls.
+- Tests performed: `python -m pytest -q`
+- Exact test result: 33 passed in 0.32s
+- No real provider calls were made.
+- No API keys or secrets were committed.
+- Retry, fallback, rate-limit, timeout, and provider-network logic were intentionally not implemented in this step.
+- Result: completed
+
+## Step 8 — Multi-Provider LLM Integration
+
+- AI tool used: coding agent
+- Task: implement provider adapters for Gemini and OpenAI behind the existing provider-agnostic LLM client abstraction.
+- Files created/modified:
+  - `app/llm_client.py`
+  - `tests/test_llm_client.py`
+  - `requirements.txt`
+  - `.env.example`
+  - `AI_USAGE_LOG.md`
+- Multi-provider architecture: `LLMClient` now delegates to provider adapters (`GeminiProvider` and `OpenAIProvider`) behind a common interface so the classifier and business logic do not depend on provider-specific branching.
+- Provider selection: configured through `LLM_PROVIDER`, `LLM_MODEL`, and `LLM_API_KEY`; the same application code works with either provider by configuration alone.
+- Structured output: both adapters normalize provider responses into provider-independent Python objects suitable for later Pydantic validation without bundling any bug-classification logic into the provider layer.
+- Error handling: missing config, unsupported provider, provider initialization failure, and provider request failure are translated into application-level client errors without exposing API keys in exception text.
+- Tests performed: `python -m pytest -q`
+- Exact test result: 49 passed in 7.73s
+- No real API calls were made. All provider tests use mocked SDK responses and exceptions.
+- No API keys or secrets were committed or embedded in source/test files.
+- Unimplemented in this bounded step: retries, exponential backoff, rate-limit handling, model fallback, timeout policy, streaming, and token-budget management.
+- Result: completed within the provider-integration scope only.
+
 ## Future AI-Assisted Tasks
 
 Subsequent AI-assisted tasks will be appended to this log as they are completed.
