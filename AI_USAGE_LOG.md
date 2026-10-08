@@ -115,6 +115,22 @@ This project uses AI coding assistance during development. Each bounded task is 
 - Unimplemented in this bounded step: retries, exponential backoff, rate-limit handling, model fallback, timeout policy, streaming, and token-budget management.
 - Result: completed within the provider-integration scope only.
 
+## Step 9 — Classification Prompt Design
+
+- AI tool used: coding agent
+- Task: create prompt-building functions for system instructions, developer classification instructions, and untrusted user bug-report input.
+- Files created/modified:
+  - `app/prompts.py`
+  - `tests/test_prompts.py`
+  - `AI_USAGE_LOG.md`
+- Prompt structure: `build_system_prompt()` defines high-level safety and anti-hallucination constraints; `build_developer_prompt()` defines the output contract and classification rules; `build_user_prompt(bug_report)` inserts the raw bug report as untrusted input while keeping the instructions authoritative.
+- Classification rules included: category selection, severity rules, priority rules, environment extraction restrictions, issue normalization, reproduction availability criteria, confidence requirements, and human-review routing rules.
+- Anti-hallucination rules included: no invented environment details, no invented reproduction steps, no invented root causes, no invented technical details, and explicit uncertainty preservation when the report is vague or incomplete.
+- Tests performed: `python -m pytest -q`
+- Exact test result: 62 passed in 0.95s
+- No LLM calls were made. These tests are deterministic and do not invoke any provider SDK or network path.
+- Result: completed within the prompt-design scope only.
+
 ## Future AI-Assisted Tasks
 
 Subsequent AI-assisted tasks will be appended to this log as they are completed.
