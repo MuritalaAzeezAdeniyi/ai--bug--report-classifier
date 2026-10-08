@@ -73,9 +73,6 @@ class BugReportClassifier:
             except json.JSONDecodeError as exc:
                 raise InvalidStructuredOutputError("LLM structured output is not valid JSON.") from exc
 
-        if not isinstance(payload, dict):
-            raise InvalidStructuredOutputError("LLM structured output is not a dictionary.")
-
         try:
             return BugReport.model_validate(payload)
         except Exception as exc:

@@ -26,8 +26,8 @@ class FakeLLMClient:
         return self.response
 
 
-def test_valid_bug_report_produces_valid_bugreport():
-    payload = {
+def valid_payload():
+    return {
         "category": "API",
         "severity": "High",
         "priority": "P1",
@@ -37,6 +37,10 @@ def test_valid_bug_report_produces_valid_bugreport():
         "confidence": 0.87,
         "requires_human_review": False,
     }
+
+
+def test_valid_bug_report_produces_valid_bugreport():
+    payload = valid_payload()
     classifier = BugReportClassifier(FakeLLMClient(payload))
 
     result = classifier.classify("API requests fail after the token expires on production")
@@ -97,6 +101,60 @@ def test_invalid_structured_output_is_rejected():
         classifier.classify("Something is broken")
 
 
+def test_missing_required_field_is_rejected():
+    payload = valid_payload()
+    payload.pop("issue")
+    classifier = BugReportClassifier(FakeLLMClient(payload))
+
+    with pytest.raises(InvalidStructuredOutputError):
+        classifier.classify("Missing issue field")
+
+
+def test_invalid_category_rejected():
+    payload = valid_payload()
+    payload["category"] = "not-a-valid-category"
+    classifier = BugReportClassifier(FakeLLMClient(payload))
+
+    with pytest.raises(InvalidStructuredOutputError):
+        classifier.classify("Bad category")
+
+
+def test_invalid_severity_rejected():
+    payload = valid_payload()
+    payload["severity"] = "Urgent"
+    classifier = BugReportClassifier(FakeLLMClient(payload))
+
+    with pytest.raises(InvalidStructuredOutputError):
+        classifier.classify("Bad severity")
+
+
+def test_invalid_priority_rejected():
+    payload = valid_payload()
+    payload["priority"] = "P99"
+    classifier = BugReportClassifier(FakeLLMClient(payload))
+
+    with pytest.raises(InvalidStructuredOutputError):
+        classifier.classify("Bad priority")
+
+
+def test_invalid_confidence_rejected():
+    payload = valid_payload()
+    payload["confidence"] = 1.5
+    classifier = BugReportClassifier(FakeLLMClient(payload))
+
+    with pytest.raises(InvalidStructuredOutputError):
+        classifier.classify("Bad confidence")
+
+
+def test_invalid_boolean_rejected():
+    payload = valid_payload()
+    payload["requires_human_review"] = "yes"
+    classifier = BugReportClassifier(FakeLLMClient(payload))
+
+    with pytest.raises(InvalidStructuredOutputError):
+        classifier.classify("Bad bool")
+
+
 def test_empty_input_is_rejected():
     classifier = BugReportClassifier(FakeLLMClient())
 
@@ -112,10 +170,13 @@ def test_whitespace_input_is_rejected():
 
 
 def test_llm_client_errors_are_translated_appropriately():
-    classifier = BugReportClassifier(FakeLLMClient(error=RuntimeError("provider exploded")))
+    classifier = BugReportClassifier(FakeLLMClient(error=RuntimeError("provider exploded with secret=abc123")))
 
-    with pytest.raises(ClientFailureError, match="LLM client failed"):
+    with pytest.raises(ClientFailureError, match="LLM client failed") as excinfo:
         classifier.classify("A request fails")
+
+    assert "abc123" not in str(excinfo.value)
+    assert "secret" not in str(excinfo.value).lower()
 
 
 def test_provider_specific_sdks_are_not_imported_by_bug_service():

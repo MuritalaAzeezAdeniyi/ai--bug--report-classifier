@@ -150,6 +150,23 @@ This project uses AI coding assistance during development. Each bounded task is 
 - Provider-specific SDKs remain outside the service boundary; no direct importer references were added in the bug service code.
 - Result: completed within the classification-service scope only.
 
+## Step 11 — Classification Validation & Error Handling
+
+- AI tool used: coding agent
+- Task: tighten validation and error handling around the classification service without adding retries, fallback, rate-limit logic, timeout logic, or provider-specific branching.
+- Files created/modified:
+  - `app/bug_service.py`
+  - `tests/test_bug_service.py`
+  - `AI_USAGE_LOG.md`
+- Validation work performed: kept input validation deterministic and explicit for empty and whitespace-only values, preserved meaningful user input, and delegated structured-output checks to the existing BugReport Pydantic model instead of re-implementing schema rules in the service.
+- Error-handling work performed: clarified typed exceptions for invalid input, invalid structured output, and unexpected client failures; ensured validation problems from BugReport become typed invalid-output errors; ensured unexpected injected client exceptions become typed client/classification errors without swallowing context.
+- Tests added: coverage for empty input, whitespace input, valid inputs, missing required fields, invalid category/severity/priority/confidence/bool values, invalid-output translation, and secret-sanitized client error messages.
+- Tests performed: `python -m pytest -q`
+- Exact test result: 72 passed in 6.27s
+- No real LLM calls were made. The service continues to use a fake/mock client for deterministic tests only.
+- Retries, fallback, rate-limit handling, timeout policy, human-review routing, and confidence thresholds remain out of scope for this step.
+- Result: completed within the validation and error-handling scope only.
+
 ## Future AI-Assisted Tasks
 
 Subsequent AI-assisted tasks will be appended to this log as they are completed.
