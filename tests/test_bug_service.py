@@ -8,6 +8,8 @@ from app.bug_service import (
     ClientFailureError,
     EmptyBugReportError,
     InvalidStructuredOutputError,
+    RetryPolicy,
+    TransientClientError,
 )
 from app.prompts import build_developer_prompt, build_system_prompt, build_user_prompt
 from app.schemas import BugReport
@@ -49,6 +51,108 @@ def test_valid_bug_report_produces_valid_bugreport():
     assert result.category == "API"
     assert result.severity == "High"
     assert result.priority == "P1"
+
+
+def test_transient_error_retries_and_succeeds():
+    fake_llm = FakeLLMClient(response=valid_payload(), error=TransientClientError("temporary issue"))
+    sleep_calls = []
+    policy = RetryPolicy(max_attempts=2, base_delay_seconds=0.25, max_delay_seconds=2.0, sleep_fn=sleep_calls.append)
+    classifier = BugReportClassifier(fake_llm, retry_policy=policy)
+
+    first_call = FakeLLMClient(response=valid_payload(), error=TransientClientError("temporary issue"))
+    first_call.generate = lambda *args, **kwargs: (_ for _ in ()).throw(TransientClientError("temporary issue"))
+
+    fake_llm.calls = []
+    fake_llm.error = TransientClientError("temporary issue")
+    fake_llm.response = None
+
+    class RetrySequenceClient:
+        def __init__(self):
+            self.calls = 0
+
+        def generate(self, *args, **kwargs):
+            self.calls += 1
+            if self.calls == 1:
+                raise TransientClientError("temporary issue")
+            return valid_payload()
+
+    classifier = BugReportClassifier(RetrySequenceClient(), retry_policy=policy)
+    result = classifier.classify("Temporary issue then success")
+
+    assert isinstance(result, BugReport)
+    assert result.category == "API"
+    assert sleep_calls == [0.25]
+
+
+def test_retry_policy_retries_up_to_max_attempts():
+    attempts = {"count": 0}
+
+    class FailAlwaysClient:
+        def generate(self, *args, **kwargs):
+            attempts["count"] += 1
+            raise TransientClientError("still failing")
+
+    sleep_calls = []
+    policy = RetryPolicy(max_attempts=3, base_delay_seconds=0.5, max_delay_seconds=2.0, sleep_fn=lambda delay: sleep_calls.append(delay))
+    classifier = BugReportClassifier(FailAlwaysClient(), retry_policy=policy)
+
+    with pytest.raises(ClientFailureError):
+        classifier.classify("This keeps failing")
+
+    assert attempts["count"] == 3
+    assert sleep_calls == [0.5, 0.5]
+
+
+def test_invalid_structured_output_is_not_retried():
+    class BrokenClient:
+        def generate(self, *args, **kwargs):
+            return {"category": "not-real"}
+
+    policy = RetryPolicy(max_attempts=4, base_delay_seconds=0.5, max_delay_seconds=2.0, sleep_fn=lambda delay: (_ for _ in ()).throw(AssertionError("sleep must not be called")))
+    classifier = BugReportClassifier(BrokenClient(), retry_policy=policy)
+
+    with pytest.raises(InvalidStructuredOutputError):
+        classifier.classify("Bad schema")
+
+
+def test_empty_input_is_not_retried():
+    sleep_calls = []
+    policy = RetryPolicy(max_attempts=4, base_delay_seconds=0.5, max_delay_seconds=2.0, sleep_fn=lambda delay: sleep_calls.append(delay))
+    classifier = BugReportClassifier(FakeLLMClient(), retry_policy=policy)
+
+    with pytest.raises(EmptyBugReportError):
+        classifier.classify("")
+
+    assert sleep_calls == []
+
+
+def test_backoff_sequence_uses_exponential_growth():
+    delays = []
+    policy = RetryPolicy(max_attempts=5, base_delay_seconds=0.25, max_delay_seconds=1.0, sleep_fn=lambda delay: delays.append(delay))
+
+    assert policy.delay_for_attempt(1) == 0.25
+    assert policy.delay_for_attempt(2) == 0.25
+    assert policy.delay_for_attempt(3) == 0.5
+    assert policy.delay_for_attempt(4) == 1.0
+    assert policy.delay_for_attempt(5) == 1.0
+
+
+def test_client_failure_with_secret_is_sanitized_in_retry_error():
+    class SecretFailingClient:
+        def generate(self, *args, **kwargs):
+            raise TransientClientError("temporary failure with api_key=abc123 and token=xyz987")
+
+    policy = RetryPolicy(max_attempts=2, base_delay_seconds=0.1, max_delay_seconds=0.5, sleep_fn=lambda delay: None)
+    classifier = BugReportClassifier(SecretFailingClient(), retry_policy=policy)
+
+    with pytest.raises(ClientFailureError) as excinfo:
+        classifier.classify("Secret failure")
+
+    text = str(excinfo.value)
+    assert "abc123" not in text
+    assert "xyz987" not in text
+    assert "api_key" not in text.lower()
+    assert "token" not in text.lower()
 
 
 def test_correct_prompts_are_passed_to_the_llm_client():

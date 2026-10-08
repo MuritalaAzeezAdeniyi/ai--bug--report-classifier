@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import json
-from typing import Any
+import re
+import time
+from dataclasses import dataclass
+from typing import Any, Callable
 
 from app.prompts import build_developer_prompt, build_system_prompt, build_user_prompt
 from app.schemas import BugReport
@@ -23,13 +26,42 @@ class ClientFailureError(ClassificationServiceError):
     """Raised when the underlying LLM client fails unexpectedly."""
 
 
+class TransientClientError(ClientFailureError):
+    """Raised when an LLM client error is transient and retryable."""
+
+
+@dataclass(frozen=True)
+class RetryPolicy:
+    max_attempts: int = 3
+    base_delay_seconds: float = 0.5
+    max_delay_seconds: float = 4.0
+    sleep_fn: Callable[[float], None] = time.sleep
+
+    def __post_init__(self) -> None:
+        if self.max_attempts < 1:
+            raise ValueError("max_attempts must be at least 1.")
+        if self.base_delay_seconds < 0:
+            raise ValueError("base_delay_seconds must be non-negative.")
+        if self.max_delay_seconds < 0:
+            raise ValueError("max_delay_seconds must be non-negative.")
+
+    def delay_for_attempt(self, attempt_number: int) -> float:
+        if attempt_number < 1:
+            raise ValueError("attempt_number must be at least 1.")
+        if attempt_number == 1:
+            return min(self.base_delay_seconds, self.max_delay_seconds)
+        exp = 2 ** (attempt_number - 2)
+        return min(self.base_delay_seconds * exp, self.max_delay_seconds)
+
+
 class BugReportClassifier:
     """Classifies a raw bug report into a validated BugReport instance."""
 
-    def __init__(self, llm_client: Any):
+    def __init__(self, llm_client: Any, retry_policy: RetryPolicy | None = None):
         if llm_client is None:
             raise ValueError("llm_client must not be None.")
         self._llm_client = llm_client
+        self._retry_policy = retry_policy or RetryPolicy()
 
     def classify(self, bug_report: str) -> BugReport:
         if not isinstance(bug_report, str) or not bug_report.strip():
@@ -46,15 +78,44 @@ class BugReportClassifier:
             f"{user_prompt}"
         )
 
-        try:
-            structured_response = self._llm_client.generate(
-                combined_prompt,
-                response_format="json_object",
-            )
-        except Exception as exc:
-            raise ClientFailureError("LLM client failed to classify the bug report.") from exc
+        for attempt_number in range(1, self._retry_policy.max_attempts + 1):
+            try:
+                structured_response = self._llm_client.generate(
+                    combined_prompt,
+                    response_format="json_object",
+                )
+            except TransientClientError as exc:
+                if attempt_number >= self._retry_policy.max_attempts:
+                    raise self._wrap_client_failure(exc, attempt_number) from exc
+                delay = self._retry_policy.delay_for_attempt(attempt_number)
+                self._retry_policy.sleep_fn(delay)
+                continue
+            except Exception as exc:
+                raise self._wrap_client_failure(exc, attempt_number) from exc
 
-        return self._validate_response(structured_response)
+            try:
+                return self._validate_response(structured_response)
+            except InvalidStructuredOutputError:
+                raise
+
+    @staticmethod
+    def _wrap_client_failure(exc: BaseException, attempt_number: int) -> ClientFailureError:
+        message = str(exc).strip() or exc.__class__.__name__
+        safe_message = BugReportClassifier._sanitize_error_text(message)
+        if attempt_number > 1:
+            return ClientFailureError(f"LLM client failed after {attempt_number} attempts: {safe_message}")
+        return ClientFailureError(f"LLM client failed: {safe_message}")
+
+    @staticmethod
+    def _sanitize_error_text(message: str) -> str:
+        redacted = message
+        for key_name in ("api_key", "apikey", "token", "secret", "authorization", "password"):
+            redacted = re.sub(
+                rf"(?i)(?:\b{key_name}\b\s*[:=]\s*)[^\s,;\]]+",
+                "[REDACTED]",
+                redacted,
+            )
+        return redacted
 
     @staticmethod
     def _validate_response(payload: Any) -> BugReport:

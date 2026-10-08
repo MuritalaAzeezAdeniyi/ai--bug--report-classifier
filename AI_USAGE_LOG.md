@@ -167,6 +167,23 @@ This project uses AI coding assistance during development. Each bounded task is 
 - Retries, fallback, rate-limit handling, timeout policy, human-review routing, and confidence thresholds remain out of scope for this step.
 - Result: completed within the validation and error-handling scope only.
 
+## Step 12 — Retry and Transient Failure Handling
+
+- AI tool used: coding agent
+- Task: add deterministic retry handling for transient LLM client failures, keep input validation and schema checks unchanged, and confirm the classifier still rejects invalid structured output without retrying.
+- Files created/modified:
+  - `app/bug_service.py`
+  - `tests/test_bug_service.py`
+  - `AI_USAGE_LOG.md`
+- What was implemented: a `RetryPolicy` dataclass with capped exponential backoff, a transient error type, and a retry loop around provider calls in `BugReportClassifier.classify()` that only retries transient client exceptions and leaves validation failures as immediate application errors.
+- Retry behavior: retries are bounded by `max_attempts`, `base_delay_seconds`, and `max_delay_seconds`; the policy is deterministic and injected through the classifier so tests can verify exact delay values without real sleeps or network calls.
+- Error handling: client exceptions are wrapped as `ClientFailureError` while sanitizing secret-like values such as `api_key`, `token`, `secret`, `authorization`, and `password` before surfacing them in messages.
+- Tests added/updated: retry success after a transient failure, max-attempt failure handling, no-retry behavior for invalid schema output or empty input, deterministic backoff validation, and secret-redaction checks.
+- Tests performed: `python -m pytest -q`
+- Exact test result: 84 passed in 7.36s
+- No real LLM/provider calls were made. All retry behavior was validated against deterministic fake clients and explicit backoff values only.
+- Result: completed within the retry and transient-failure scope only.
+
 ## Future AI-Assisted Tasks
 
 Subsequent AI-assisted tasks will be appended to this log as they are completed.
