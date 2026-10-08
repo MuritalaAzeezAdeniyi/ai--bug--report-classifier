@@ -131,6 +131,25 @@ This project uses AI coding assistance during development. Each bounded task is 
 - No LLM calls were made. These tests are deterministic and do not invoke any provider SDK or network path.
 - Result: completed within the prompt-design scope only.
 
+## Step 10 — Bug Classification Service
+
+- AI tool used: coding agent
+- Task: build the application service that connects the BugReport schema, prompt module, and provider-agnostic LLMClient into a single classification flow.
+- Files created/modified:
+  - `app/bug_service.py`
+  - `tests/test_bug_service.py`
+  - `AI_USAGE_LOG.md`
+- Service responsibility: validate raw bug-report input, build system/developer/user prompts from the prompt module, call the provider-agnostic LLMClient, validate the returned structured payload against the existing BugReport schema, and return a validated BugReport.
+- Dependency injection: the classifier receives an LLMClient instance rather than constructing provider logic internally, keeping the service provider-independent.
+- Prompt integration: the service uses `build_system_prompt()`, `build_developer_prompt()`, and `build_user_prompt()` from `app/prompts.py` and concatenates them into a single request payload for the LLM client while preserving the separation of responsibilities.
+- Structured-output validation: invalid or malformed output is rejected with an application-level error instead of being silently repaired or partially accepted.
+- Error handling: empty input, invalid structured output, and unexpected client/provider failure are surfaced as clear application-level errors. Retries, fallback, rate-limit handling, and timeout policy are intentionally not implemented in this step.
+- Tests performed: `python -m pytest -q`
+- Exact test result: 72 passed in 7.22s
+- No real LLM calls were made. The service is tested against a deterministic fake client and does not invoke Gemini or OpenAI SDKs.
+- Provider-specific SDKs remain outside the service boundary; no direct importer references were added in the bug service code.
+- Result: completed within the classification-service scope only.
+
 ## Future AI-Assisted Tasks
 
 Subsequent AI-assisted tasks will be appended to this log as they are completed.
