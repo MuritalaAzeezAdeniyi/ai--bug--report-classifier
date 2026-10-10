@@ -184,6 +184,46 @@ This project uses AI coding assistance during development. Each bounded task is 
 - No real LLM/provider calls were made. All retry behavior was validated against deterministic fake clients and explicit backoff values only.
 - Result: completed within the retry and transient-failure scope only.
 
+## Step 13 — Failure Categorization
+
+- AI tool used: coding agent
+- Task: add a provider-agnostic failure taxonomy to the classification service and connect it to the existing evaluator failure categories without introducing provider-specific logic or routing policies.
+- Files created/modified:
+  - `app/evaluator.py`
+  - `app/bug_service.py`
+  - `tests/test_bug_service.py`
+  - `AI_USAGE_LOG.md`
+- What was implemented: centralized the taxonomy in a `FailureCategory` enum that matches the evaluator’s canonical vocabulary, added category metadata to service exceptions, and mapped unexpected client failures to a default `PROVIDER_ERROR` while preserving explicit timeout and rate-limit classifications.
+- Error mappings: invalid structured output or schema validation failures map to `INVALID_SCHEMA`; missing/empty input maps to `MISSING_INFORMATION`; explicit timeout-related messages map to `LLM_TIMEOUT`; explicit rate-limit messages map to `RATE_LIMITED`; general provider failures default to `PROVIDER_ERROR`.
+- Retry compatibility: the retry loop still retries only transient client failures, validation errors remain non-retryable, and the retry policy is not changed beyond preserving the existing behavior.
+- Tests added: category representation, mapping from invalid output to schema failure, timeout mapping, rate-limit mapping, provider-failure fallback, safe secret redaction, and retry compatibility assertions.
+- Tests performed: `python -m pytest -q`
+- Exact test result: 84 passed in 5.66s
+- No real LLM/provider calls were made. The service remains provider-agnostic and relies only on deterministic fake clients and message-based classification rules.
+- Human-review routing and evaluation execution remain intentionally out of scope for this step.
+- Result: completed within the failure-categorization scope only.
+
+## Step 13A — Typed Provider Error Classification
+
+- AI tool used: coding agent
+- Task: replace message-based timeout and rate-limit detection with provider-neutral exception types while preserving the existing failure taxonomy, service error mapping, and retry behavior.
+- Files created/modified:
+  - `app/llm_client.py`
+  - `app/bug_service.py`
+  - `tests/test_llm_client.py`
+  - `tests/test_bug_service.py`
+  - `AI_USAGE_LOG.md`
+- What was implemented: introduced provider-neutral `LLMTimeoutError` and `LLMRateLimitError` exceptions as subclasses of `ProviderRequestError`, added structured status-code detection in the provider adapters, and kept the canonical `FailureCategory` enum in `app/evaluator.py` as the single source of truth.
+- SDK-to-neutral mappings: timeout-style SDK conditions map to `LLMTimeoutError`; HTTP 429 or rate-limit-style status information maps to `LLMRateLimitError`; other request failures remain `ProviderRequestError`.
+- Service-level categorization: `InvalidStructuredOutputError` maps to `INVALID_SCHEMA`, `LLMTimeoutError` maps to `LLM_TIMEOUT`, `LLMRateLimitError` maps to `RATE_LIMITED`, and generic provider request failures map to `PROVIDER_ERROR` without provider-name checks or message parsing.
+- Retry policy: retryability remains explicit and bounded by the existing retry loop; only the typed transient failure classes are retried, while validation/schema failures remain non-retryable.
+- Tests added/updated: adapter-level timeout and rate-limit mapping, generic provider failure mapping, secret-redaction checks, service category mapping, and retry compatibility assertions.
+- Tests performed: `python -m pytest -q`
+- Exact test result: 89 passed in 9.09s
+- No real LLM/provider calls were made. All checks use deterministic mocks and provider-neutral exceptions only.
+- Human-review routing and live evaluation execution remain intentionally out of scope for this step.
+- Result: completed within the typed provider-error classification scope only.
+
 ## Future AI-Assisted Tasks
 
 Subsequent AI-assisted tasks will be appended to this log as they are completed.

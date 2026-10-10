@@ -6,6 +6,8 @@ import pytest
 from app.llm_client import (
     LLMClient,
     LLMClientConfig,
+    LLMRateLimitError,
+    LLMTimeoutError,
     MissingConfigurationError,
     ProviderInitializationError,
     ProviderRequestError,
@@ -164,6 +166,45 @@ def test_openai_provider_translates_request_failure(monkeypatch):
 
     provider = LLMClient(LLMClientConfig(provider="openai", model="gpt-4o-mini", api_key="abc"))._provider
     with pytest.raises(ProviderRequestError):
+        provider.generate("hello")
+
+
+def test_gemini_provider_translates_timeout_error(monkeypatch):
+    class TimeoutErrorException(Exception):
+        status_code = 504
+
+    class FakeModel:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def generate_content(self, *args, **kwargs):
+            raise TimeoutErrorException("deadline exceeded")
+
+    fake_google_module = SimpleNamespace(
+        configure=lambda *args, **kwargs: None,
+        GenerativeModel=lambda model_name: FakeModel(),
+    )
+    monkeypatch.setitem(sys.modules, "google", SimpleNamespace(genai=fake_google_module))
+    monkeypatch.setitem(sys.modules, "google.genai", fake_google_module)
+
+    provider = LLMClient(LLMClientConfig(provider="gemini", model="gemini-2.5-flash", api_key="abc"))._provider
+    with pytest.raises(LLMTimeoutError):
+        provider.generate("hello")
+
+
+def test_openai_provider_translates_rate_limit_error(monkeypatch):
+    class RateLimitErrorException(Exception):
+        status_code = 429
+
+    class FakeOpenAIClient:
+        def __init__(self, *args, **kwargs):
+            self.responses = SimpleNamespace(create=lambda **kwargs: (_ for _ in ()).throw(RateLimitErrorException("too many requests")))
+
+    fake_openai_module = SimpleNamespace(OpenAI=lambda api_key: FakeOpenAIClient())
+    monkeypatch.setitem(sys.modules, "openai", fake_openai_module)
+
+    provider = LLMClient(LLMClientConfig(provider="openai", model="gpt-4o-mini", api_key="abc"))._provider
+    with pytest.raises(LLMRateLimitError):
         provider.generate("hello")
 
 

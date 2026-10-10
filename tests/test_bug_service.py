@@ -11,6 +11,8 @@ from app.bug_service import (
     RetryPolicy,
     TransientClientError,
 )
+from app.evaluator import FAILURE_CATEGORIES, FailureCategory
+from app.llm_client import LLMRateLimitError, LLMTimeoutError
 from app.prompts import build_developer_prompt, build_system_prompt, build_user_prompt
 from app.schemas import BugReport
 
@@ -39,6 +41,19 @@ def valid_payload():
         "confidence": 0.87,
         "requires_human_review": False,
     }
+
+
+def test_failure_categories_are_canonical_and_inspectable():
+    assert list(FailureCategory) == [
+        FailureCategory.INVALID_SCHEMA,
+        FailureCategory.LOW_CONFIDENCE,
+        FailureCategory.AMBIGUOUS_REPORT,
+        FailureCategory.MISSING_INFORMATION,
+        FailureCategory.LLM_TIMEOUT,
+        FailureCategory.RATE_LIMITED,
+        FailureCategory.PROVIDER_ERROR,
+    ]
+    assert FAILURE_CATEGORIES == tuple(category.value for category in FailureCategory)
 
 
 def test_valid_bug_report_produces_valid_bugreport():
@@ -153,6 +168,55 @@ def test_client_failure_with_secret_is_sanitized_in_retry_error():
     assert "xyz987" not in text
     assert "api_key" not in text.lower()
     assert "token" not in text.lower()
+    assert excinfo.value.category == FailureCategory.PROVIDER_ERROR
+
+
+def test_invalid_structured_output_maps_to_invalid_schema_category():
+    classifier = BugReportClassifier(FakeLLMClient({"category": "not-real"}))
+
+    with pytest.raises(InvalidStructuredOutputError) as excinfo:
+        classifier.classify("Bad schema")
+
+    assert excinfo.value.category == FailureCategory.INVALID_SCHEMA
+
+
+def test_explicit_timeout_error_maps_to_llm_timeout_category():
+    class TimeoutClient:
+        def generate(self, *args, **kwargs):
+            raise LLMTimeoutError("request timed out after 60 seconds")
+
+    classifier = BugReportClassifier(TimeoutClient(), retry_policy=RetryPolicy(max_attempts=2, base_delay_seconds=0.0, max_delay_seconds=0.0, sleep_fn=lambda delay: None))
+
+    with pytest.raises(ClientFailureError) as excinfo:
+        classifier.classify("Timed out")
+
+    assert excinfo.value.category == FailureCategory.LLM_TIMEOUT
+
+
+def test_explicit_rate_limit_error_maps_to_rate_limited_category():
+    class RateLimitedClient:
+        def generate(self, *args, **kwargs):
+            raise LLMRateLimitError("429 Too Many Requests")
+
+    classifier = BugReportClassifier(RateLimitedClient(), retry_policy=RetryPolicy(max_attempts=2, base_delay_seconds=0.0, max_delay_seconds=0.0, sleep_fn=lambda delay: None))
+
+    with pytest.raises(ClientFailureError) as excinfo:
+        classifier.classify("Rate limited")
+
+    assert excinfo.value.category == FailureCategory.RATE_LIMITED
+
+
+def test_unknown_client_failure_maps_to_provider_error_category():
+    class GenericFailureClient:
+        def generate(self, *args, **kwargs):
+            raise RuntimeError("provider is unavailable")
+
+    classifier = BugReportClassifier(GenericFailureClient())
+
+    with pytest.raises(ClientFailureError) as excinfo:
+        classifier.classify("Provider issue")
+
+    assert excinfo.value.category == FailureCategory.PROVIDER_ERROR
 
 
 def test_correct_prompts_are_passed_to_the_llm_client():

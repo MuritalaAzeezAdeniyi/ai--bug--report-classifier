@@ -6,6 +6,8 @@ import time
 from dataclasses import dataclass
 from typing import Any, Callable
 
+from app.evaluator import FailureCategory
+from app.llm_client import LLMRateLimitError, LLMTimeoutError, ProviderRequestError
 from app.prompts import build_developer_prompt, build_system_prompt, build_user_prompt
 from app.schemas import BugReport
 
@@ -13,21 +15,37 @@ from app.schemas import BugReport
 class ClassificationServiceError(RuntimeError):
     """Base error for classification service failures."""
 
+    def __init__(self, message: str, *, category: FailureCategory = FailureCategory.PROVIDER_ERROR):
+        super().__init__(message)
+        self.category = category
+
 
 class EmptyBugReportError(ClassificationServiceError):
     """Raised when the input report is missing or empty."""
+
+    def __init__(self, message: str):
+        super().__init__(message, category=FailureCategory.MISSING_INFORMATION)
 
 
 class InvalidStructuredOutputError(ClassificationServiceError):
     """Raised when the LLM returns structured data that cannot be validated."""
 
+    def __init__(self, message: str):
+        super().__init__(message, category=FailureCategory.INVALID_SCHEMA)
+
 
 class ClientFailureError(ClassificationServiceError):
     """Raised when the underlying LLM client fails unexpectedly."""
 
+    def __init__(self, message: str, *, category: FailureCategory = FailureCategory.PROVIDER_ERROR):
+        super().__init__(message, category=category)
+
 
 class TransientClientError(ClientFailureError):
     """Raised when an LLM client error is transient and retryable."""
+
+    def __init__(self, message: str):
+        super().__init__(message, category=FailureCategory.PROVIDER_ERROR)
 
 
 @dataclass(frozen=True)
@@ -84,12 +102,14 @@ class BugReportClassifier:
                     combined_prompt,
                     response_format="json_object",
                 )
-            except TransientClientError as exc:
+            except (LLMTimeoutError, LLMRateLimitError, TransientClientError) as exc:
                 if attempt_number >= self._retry_policy.max_attempts:
                     raise self._wrap_client_failure(exc, attempt_number) from exc
                 delay = self._retry_policy.delay_for_attempt(attempt_number)
                 self._retry_policy.sleep_fn(delay)
                 continue
+            except ProviderRequestError as exc:
+                raise self._wrap_client_failure(exc, attempt_number) from exc
             except Exception as exc:
                 raise self._wrap_client_failure(exc, attempt_number) from exc
 
@@ -99,12 +119,30 @@ class BugReportClassifier:
                 raise
 
     @staticmethod
+    def _infer_failure_category(exc: BaseException) -> FailureCategory:
+        if isinstance(exc, InvalidStructuredOutputError):
+            return FailureCategory.INVALID_SCHEMA
+        if isinstance(exc, LLMTimeoutError):
+            return FailureCategory.LLM_TIMEOUT
+        if isinstance(exc, LLMRateLimitError):
+            return FailureCategory.RATE_LIMITED
+        if isinstance(exc, ProviderRequestError):
+            return FailureCategory.PROVIDER_ERROR
+
+        if isinstance(exc, ClassificationServiceError):
+            category = getattr(exc, "category", None)
+            if isinstance(category, FailureCategory):
+                return category
+        return FailureCategory.PROVIDER_ERROR
+
+    @staticmethod
     def _wrap_client_failure(exc: BaseException, attempt_number: int) -> ClientFailureError:
         message = str(exc).strip() or exc.__class__.__name__
         safe_message = BugReportClassifier._sanitize_error_text(message)
+        category = BugReportClassifier._infer_failure_category(exc)
         if attempt_number > 1:
-            return ClientFailureError(f"LLM client failed after {attempt_number} attempts: {safe_message}")
-        return ClientFailureError(f"LLM client failed: {safe_message}")
+            return ClientFailureError(f"LLM client failed after {attempt_number} attempts: {safe_message}", category=category)
+        return ClientFailureError(f"LLM client failed: {safe_message}", category=category)
 
     @staticmethod
     def _sanitize_error_text(message: str) -> str:
@@ -137,4 +175,6 @@ class BugReportClassifier:
         try:
             return BugReport.model_validate(payload)
         except Exception as exc:
-            raise InvalidStructuredOutputError("LLM structured output did not match the BugReport schema.") from exc
+            raise InvalidStructuredOutputError(
+                "LLM structured output did not match the BugReport schema."
+            ) from exc

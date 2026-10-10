@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from dataclasses import dataclass
 from typing import Any, Mapping, Protocol
 
@@ -10,6 +11,18 @@ DEFAULT_MODELS = {
     "openai": "gpt-4o-mini",
     "gemini": "gemini-2.5-flash",
 }
+
+
+def _redact_sensitive_details(message: str) -> str:
+    redacted = message or ""
+    redacted = redacted.replace("\r", " ").replace("\n", " ")
+    for key_name in ("api_key", "apikey", "authorization", "token", "secret", "password"):
+        redacted = re.sub(
+            rf"(?i)(?:\b{key_name}\b\s*[:=]\s*)[^\s,;\]]+",
+            f"{key_name}=[REDACTED]",
+            redacted,
+        )
+    return redacted
 
 
 class LLMClientError(RuntimeError):
@@ -30,6 +43,25 @@ class ProviderInitializationError(LLMClientError):
 
 class ProviderRequestError(LLMClientError):
     """Raised when a provider request fails after initialization."""
+
+    def __init__(self, message: str, *, status_code: int | str | None = None, retryable: bool = False):
+        super().__init__(_redact_sensitive_details(message))
+        self.status_code = status_code
+        self.retryable = retryable
+
+
+class LLMTimeoutError(ProviderRequestError):
+    """Raised when the provider request exceeds the configured timeout window."""
+
+    def __init__(self, message: str, *, status_code: int | str | None = None):
+        super().__init__(message, status_code=status_code, retryable=True)
+
+
+class LLMRateLimitError(ProviderRequestError):
+    """Raised when the provider rejects the request because of rate limiting or quota exhaustion."""
+
+    def __init__(self, message: str, *, status_code: int | str | None = None):
+        super().__init__(message, status_code=status_code, retryable=True)
 
 
 @dataclass(frozen=True)
@@ -67,6 +99,43 @@ class LLMProvider(Protocol):
 class BaseProvider:
     def __init__(self, config: LLMClientConfig):
         self.config = config
+
+    @staticmethod
+    def _extract_status_code(exc: BaseException) -> int | str | None:
+        for candidate in (
+            getattr(exc, "status_code", None),
+            getattr(getattr(exc, "response", None), "status_code", None),
+            getattr(getattr(exc, "body", None), "status_code", None),
+            getattr(getattr(exc, "error", None), "status_code", None),
+        ):
+            if candidate is not None:
+                return candidate
+
+        for candidate in (
+            getattr(exc, "code", None),
+            getattr(getattr(exc, "error", None), "code", None),
+        ):
+            if candidate is not None:
+                return candidate
+        return None
+
+    @staticmethod
+    def _coerce_provider_error(provider_name: str, exc: BaseException) -> ProviderRequestError:
+        status_code = BaseProvider._extract_status_code(exc)
+        error_text = str(exc).strip() or exc.__class__.__name__
+        lowered = error_text.lower()
+
+        if status_code == 429 or status_code == "429" or status_code in {"rate_limit_exceeded", "rate-limit-exceeded"}:
+            return LLMRateLimitError(f"{provider_name} request was rate limited.", status_code=status_code)
+        if "rate limit" in lowered or "too many requests" in lowered or "quota exceeded" in lowered:
+            return LLMRateLimitError(f"{provider_name} request was rate limited.", status_code=status_code)
+
+        if status_code in {408, 504} or status_code in {"408", "504", "timeout", "timed_out", "deadline_exceeded"}:
+            return LLMTimeoutError(f"{provider_name} request timed out.", status_code=status_code)
+        if any(token in lowered for token in ("timed out", "timeout", "deadline exceeded", "time out")):
+            return LLMTimeoutError(f"{provider_name} request timed out.", status_code=status_code)
+
+        return ProviderRequestError(f"{provider_name} request failed.", status_code=status_code, retryable=False)
 
     def _coerce_structured_output(self, payload: Any) -> dict[str, Any] | str:
         if payload is None:
@@ -134,7 +203,7 @@ class GeminiProvider(BaseProvider):
             payload = getattr(response, "text", None)
             return self._coerce_structured_output(payload)
         except Exception as exc:
-            raise ProviderRequestError("Gemini request failed.") from exc
+            raise self._coerce_provider_error("Gemini", exc) from exc
 
 
 class OpenAIProvider(BaseProvider):
@@ -172,7 +241,7 @@ class OpenAIProvider(BaseProvider):
                     payload = None
             return self._coerce_structured_output(payload)
         except Exception as exc:
-            raise ProviderRequestError("OpenAI request failed.") from exc
+            raise self._coerce_provider_error("OpenAI", exc) from exc
 
 
 class LLMClient:

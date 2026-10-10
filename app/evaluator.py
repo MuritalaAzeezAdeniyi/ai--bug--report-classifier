@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from collections import Counter
+from enum import Enum
 from pathlib import Path
 from typing import Any, Iterable, Sequence
 
@@ -9,15 +10,18 @@ from pydantic import ValidationError
 
 from app.schemas import BugReport
 
-FAILURE_CATEGORIES = (
-    "INVALID_SCHEMA",
-    "LOW_CONFIDENCE",
-    "AMBIGUOUS_REPORT",
-    "MISSING_INFORMATION",
-    "LLM_TIMEOUT",
-    "RATE_LIMITED",
-    "PROVIDER_ERROR",
-)
+
+class FailureCategory(str, Enum):
+    INVALID_SCHEMA = "INVALID_SCHEMA"
+    LOW_CONFIDENCE = "LOW_CONFIDENCE"
+    AMBIGUOUS_REPORT = "AMBIGUOUS_REPORT"
+    MISSING_INFORMATION = "MISSING_INFORMATION"
+    LLM_TIMEOUT = "LLM_TIMEOUT"
+    RATE_LIMITED = "RATE_LIMITED"
+    PROVIDER_ERROR = "PROVIDER_ERROR"
+
+
+FAILURE_CATEGORIES = tuple(category.value for category in FailureCategory)
 
 CLASSIFICATION_FIELDS = (
     "category",
