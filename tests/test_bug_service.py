@@ -7,6 +7,7 @@ from app.bug_service import (
     BugReportClassifier,
     ClientFailureError,
     EmptyBugReportError,
+    HumanReviewPolicy,
     InvalidStructuredOutputError,
     RetryPolicy,
     TransientClientError,
@@ -56,6 +57,41 @@ def test_failure_categories_are_canonical_and_inspectable():
     assert FAILURE_CATEGORIES == tuple(category.value for category in FailureCategory)
 
 
+def test_human_review_policy_requires_review_below_threshold():
+    policy = HumanReviewPolicy(confidence_threshold=0.75)
+    report = BugReport(**{**valid_payload(), "confidence": 0.74, "requires_human_review": False})
+
+    assert policy.should_require_human_review(report) is True
+
+
+def test_human_review_policy_does_not_require_review_above_threshold():
+    policy = HumanReviewPolicy(confidence_threshold=0.75)
+    report = BugReport(**{**valid_payload(), "confidence": 0.8, "requires_human_review": False})
+
+    assert policy.should_require_human_review(report) is False
+
+
+def test_human_review_policy_uses_equal_threshold_as_non_review_boundary():
+    policy = HumanReviewPolicy(confidence_threshold=0.75)
+    report = BugReport(**{**valid_payload(), "confidence": 0.75, "requires_human_review": False})
+
+    assert policy.should_require_human_review(report) is False
+
+
+def test_human_review_policy_preserves_explicit_true_flag():
+    policy = HumanReviewPolicy(confidence_threshold=0.75)
+    report = BugReport(**{**valid_payload(), "confidence": 0.9, "requires_human_review": True})
+
+    assert policy.should_require_human_review(report) is True
+
+
+def test_human_review_policy_routes_non_reproducible_reports_conservatively():
+    policy = HumanReviewPolicy(confidence_threshold=0.75)
+    report = BugReport(**{**valid_payload(), "environment": None, "reproduction_available": False, "confidence": 0.8, "requires_human_review": False})
+
+    assert policy.should_require_human_review(report) is True
+
+
 def test_valid_bug_report_produces_valid_bugreport():
     payload = valid_payload()
     classifier = BugReportClassifier(FakeLLMClient(payload))
@@ -66,6 +102,16 @@ def test_valid_bug_report_produces_valid_bugreport():
     assert result.category == "API"
     assert result.severity == "High"
     assert result.priority == "P1"
+
+
+def test_classifier_uses_configured_review_policy_threshold():
+    payload = {**valid_payload(), "confidence": 0.82, "requires_human_review": False}
+    classifier = BugReportClassifier(FakeLLMClient(payload), review_policy=HumanReviewPolicy(confidence_threshold=0.85))
+
+    result = classifier.classify("A report near the review threshold")
+
+    assert isinstance(result, BugReport)
+    assert result.requires_human_review is True
 
 
 def test_transient_error_retries_and_succeeds():

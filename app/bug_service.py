@@ -72,14 +72,35 @@ class RetryPolicy:
         return min(self.base_delay_seconds * exp, self.max_delay_seconds)
 
 
+@dataclass(frozen=True)
+class HumanReviewPolicy:
+    """Deterministic escalation rules for bug reports that should be reviewed by a human."""
+
+    confidence_threshold: float = 0.75
+
+    def __post_init__(self) -> None:
+        if not 0.0 <= self.confidence_threshold <= 1.0:
+            raise ValueError("confidence_threshold must be between 0.0 and 1.0 inclusive.")
+
+    def should_require_human_review(self, report: BugReport) -> bool:
+        if report.requires_human_review:
+            return True
+        if report.confidence < self.confidence_threshold:
+            return True
+        if not report.reproduction_available:
+            return True
+        return False
+
+
 class BugReportClassifier:
     """Classifies a raw bug report into a validated BugReport instance."""
 
-    def __init__(self, llm_client: Any, retry_policy: RetryPolicy | None = None):
+    def __init__(self, llm_client: Any, retry_policy: RetryPolicy | None = None, review_policy: HumanReviewPolicy | None = None):
         if llm_client is None:
             raise ValueError("llm_client must not be None.")
         self._llm_client = llm_client
         self._retry_policy = retry_policy or RetryPolicy()
+        self._review_policy = review_policy or HumanReviewPolicy()
 
     def classify(self, bug_report: str) -> BugReport:
         if not isinstance(bug_report, str) or not bug_report.strip():
@@ -114,7 +135,8 @@ class BugReportClassifier:
                 raise self._wrap_client_failure(exc, attempt_number) from exc
 
             try:
-                return self._validate_response(structured_response)
+                report = self._validate_response(structured_response)
+                return self._apply_review_policy(report)
             except InvalidStructuredOutputError:
                 raise
 
@@ -154,6 +176,10 @@ class BugReportClassifier:
                 redacted,
             )
         return redacted
+
+    def _apply_review_policy(self, report: BugReport) -> BugReport:
+        review_required = self._review_policy.should_require_human_review(report)
+        return report.model_copy(update={"requires_human_review": review_required})
 
     @staticmethod
     def _validate_response(payload: Any) -> BugReport:

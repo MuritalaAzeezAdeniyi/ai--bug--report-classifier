@@ -224,6 +224,22 @@ This project uses AI coding assistance during development. Each bounded task is 
 - Human-review routing and live evaluation execution remain intentionally out of scope for this step.
 - Result: completed within the typed provider-error classification scope only.
 
+## Step 14 — Deterministic Human-Review Routing
+
+- AI tool used: coding agent
+- Task: implement deterministic human-review routing for validated bug reports without introducing new schema fields, new model calls, or provider-specific logic.
+- Files created/modified:
+  - `app/bug_service.py`
+  - `tests/test_bug_service.py`
+  - `AI_USAGE_LOG.md`
+- What was implemented: a `HumanReviewPolicy` dataclass with a configurable `confidence_threshold`, a strict boundary at the threshold (`< threshold` triggers review, `== threshold` does not), preservation of an explicit `requires_human_review=True` flag, and a conservative fallback that routes reports with missing reproduction information for human review.
+- Deterministic behavior: the classifier validates the LLM output and then applies the human-review policy before returning the final `BugReport`; this keeps the review routing provider-agnostic and stable across model responses.
+- Validation approach: the rule is based only on existing schema fields (`confidence`, `reproduction_available`, `requires_human_review`) and does not create any new output contract or require additional provider side effects.
+- Tests added: threshold boundary behavior, low-confidence review routing, explicit review-flag preservation, non-reproducible report escalation, and classifier-level application of a custom review policy.
+- Tests performed: `python -m pytest -q`
+- Exact test result: 97 passed in 8.99s
+- Result: completed within the deterministic human-review routing scope only.
+
 ## Future AI-Assisted Tasks
 
 Subsequent AI-assisted tasks will be appended to this log as they are completed.
