@@ -37,8 +37,15 @@ class InvalidStructuredOutputError(ClassificationServiceError):
 class ClientFailureError(ClassificationServiceError):
     """Raised when the underlying LLM client fails unexpectedly."""
 
-    def __init__(self, message: str, *, category: FailureCategory = FailureCategory.PROVIDER_ERROR):
+    def __init__(
+        self,
+        message: str,
+        *,
+        category: FailureCategory = FailureCategory.PROVIDER_ERROR,
+        diagnostics: dict[str, str | int | None] | None = None,
+    ):
         super().__init__(message, category=category)
+        self.diagnostics = diagnostics or {}
 
 
 class TransientClientError(ClientFailureError):
@@ -162,9 +169,18 @@ class BugReportClassifier:
         message = str(exc).strip() or exc.__class__.__name__
         safe_message = BugReportClassifier._sanitize_error_text(message)
         category = BugReportClassifier._infer_failure_category(exc)
+        diagnostics = exc.diagnostics if isinstance(exc, ProviderRequestError) else None
         if attempt_number > 1:
-            return ClientFailureError(f"LLM client failed after {attempt_number} attempts: {safe_message}", category=category)
-        return ClientFailureError(f"LLM client failed: {safe_message}", category=category)
+            return ClientFailureError(
+                f"LLM client failed after {attempt_number} attempts: {safe_message}",
+                category=category,
+                diagnostics=diagnostics,
+            )
+        return ClientFailureError(
+            f"LLM client failed: {safe_message}",
+            category=category,
+            diagnostics=diagnostics,
+        )
 
     @staticmethod
     def _sanitize_error_text(message: str) -> str:

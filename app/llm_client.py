@@ -7,6 +7,34 @@ from dataclasses import dataclass
 from typing import Any, Mapping, Protocol
 
 SUPPORTED_PROVIDERS = {"openai", "gemini"}
+SAFE_PROVIDER_ERROR_CODES = {
+    "UNAUTHENTICATED",
+    "PERMISSION_DENIED",
+    "API_KEY_INVALID",
+    "INVALID_API_KEY",
+    "AUTHENTICATION_ERROR",
+    "UNAUTHORIZED",
+    "RESOURCE_EXHAUSTED",
+    "RATE_LIMIT_EXCEEDED",
+    "QUOTA_EXCEEDED",
+    "QUOTA_EXHAUSTED",
+    "DEADLINE_EXCEEDED",
+    "TIMEOUT",
+    "TIMED_OUT",
+    "MODEL_NOT_FOUND",
+    "MODEL_NOT_FOUND_ERROR",
+    "UNKNOWN_MODEL",
+    "NOT_FOUND",
+    "INVALID_ARGUMENT",
+    "INTERNAL",
+    "UNAVAILABLE",
+    "FAILED_PRECONDITION",
+    "CANCELLED",
+    "UNKNOWN",
+    "BAD_REQUEST",
+    "SERVER_ERROR",
+    "SERVICE_UNAVAILABLE",
+}
 DEFAULT_MODELS = {
     "openai": "gpt-4o-mini",
     "gemini": "gemini-2.5-flash",
@@ -44,24 +72,45 @@ class ProviderInitializationError(LLMClientError):
 class ProviderRequestError(LLMClientError):
     """Raised when a provider request fails after initialization."""
 
-    def __init__(self, message: str, *, status_code: int | str | None = None, retryable: bool = False):
+    def __init__(
+        self,
+        message: str,
+        *,
+        status_code: int | str | None = None,
+        retryable: bool = False,
+        provider_error_type: str | None = None,
+        provider_error_code: str | None = None,
+        diagnostic_cause: str = "unknown",
+    ):
         super().__init__(_redact_sensitive_details(message))
         self.status_code = status_code
         self.retryable = retryable
+        self.provider_error_type = provider_error_type
+        self.provider_error_code = provider_error_code
+        self.diagnostic_cause = diagnostic_cause
+
+    @property
+    def diagnostics(self) -> dict[str, str | int | None]:
+        return {
+            "provider_error_type": self.provider_error_type,
+            "http_status_code": self.status_code,
+            "provider_error_code": self.provider_error_code,
+            "diagnostic_cause": self.diagnostic_cause,
+        }
 
 
 class LLMTimeoutError(ProviderRequestError):
     """Raised when the provider request exceeds the configured timeout window."""
 
-    def __init__(self, message: str, *, status_code: int | str | None = None):
-        super().__init__(message, status_code=status_code, retryable=True)
+    def __init__(self, message: str, *, status_code: int | str | None = None, **diagnostics: Any):
+        super().__init__(message, status_code=status_code, retryable=True, **diagnostics)
 
 
 class LLMRateLimitError(ProviderRequestError):
     """Raised when the provider rejects the request because of rate limiting or quota exhaustion."""
 
-    def __init__(self, message: str, *, status_code: int | str | None = None):
-        super().__init__(message, status_code=status_code, retryable=True)
+    def __init__(self, message: str, *, status_code: int | str | None = None, **diagnostics: Any):
+        super().__init__(message, status_code=status_code, retryable=True, **diagnostics)
 
 
 @dataclass(frozen=True)
@@ -107,35 +156,100 @@ class BaseProvider:
             getattr(getattr(exc, "response", None), "status_code", None),
             getattr(getattr(exc, "body", None), "status_code", None),
             getattr(getattr(exc, "error", None), "status_code", None),
-        ):
-            if candidate is not None:
-                return candidate
-
-        for candidate in (
             getattr(exc, "code", None),
-            getattr(getattr(exc, "error", None), "code", None),
         ):
-            if candidate is not None:
+            if isinstance(candidate, int) and 100 <= candidate <= 599:
                 return candidate
+            if isinstance(candidate, str) and candidate.isdigit() and 100 <= int(candidate) <= 599:
+                return int(candidate)
         return None
+
+    @staticmethod
+    def _safe_error_code(value: Any) -> str | None:
+        if not isinstance(value, str):
+            return None
+        normalized = value.strip()
+        normalized_code = re.sub(r"[-.]", "_", normalized).upper()
+        return normalized_code if normalized_code in SAFE_PROVIDER_ERROR_CODES else None
+
+    @staticmethod
+    def _extract_error_code(exc: BaseException) -> str | None:
+        candidates: list[Any] = []
+        for source in (exc, getattr(exc, "error", None)):
+            if source is None:
+                continue
+            if isinstance(source, Mapping):
+                candidates.extend(source.get(key) for key in ("reason", "status", "code"))
+            else:
+                candidates.extend((getattr(source, "status", None), getattr(source, "code", None)))
+
+        details = getattr(exc, "details", None)
+        if isinstance(details, (list, tuple)):
+            for detail in details:
+                if isinstance(detail, Mapping):
+                    candidates.extend(detail.get(key) for key in ("reason", "status", "code"))
+                else:
+                    candidates.extend(getattr(detail, key, None) for key in ("reason", "status", "code"))
+
+        for candidate in candidates:
+            safe_code = BaseProvider._safe_error_code(candidate)
+            if safe_code is not None:
+                return safe_code
+        return None
+
+    @staticmethod
+    def _classify_diagnostic_cause(
+        exc: BaseException,
+        status_code: int | str | None,
+        provider_error_code: str | None,
+    ) -> str:
+        normalized_code = (provider_error_code or "").lower().replace("-", "_").replace(".", "_")
+        exception_type = exc.__class__.__name__.lower()
+        if status_code in (401, 403) or normalized_code in {
+            "unauthenticated", "permission_denied", "api_key_invalid", "invalid_api_key",
+            "authentication_error", "unauthorized",
+        }:
+            return "authentication"
+        if status_code == 429 or normalized_code in {
+            "resource_exhausted", "rate_limit_exceeded", "quota_exceeded", "quota_exhausted",
+        }:
+            return "rate_limit_or_quota"
+        if status_code in (408, 504) or normalized_code in {
+            "deadline_exceeded", "timeout", "timed_out",
+        } or "timeout" in exception_type or "deadlineexceeded" in exception_type:
+            return "timeout"
+        if normalized_code in {"model_not_found", "model_not_found_error", "unknown_model"}:
+            return "model_not_found"
+        if status_code == 404 and ("model" in exception_type and "notfound" in exception_type):
+            return "model_not_found"
+        if status_code is not None or provider_error_code is not None:
+            return "provider_error"
+        return "unknown"
 
     @staticmethod
     def _coerce_provider_error(provider_name: str, exc: BaseException) -> ProviderRequestError:
         status_code = BaseProvider._extract_status_code(exc)
-        error_text = str(exc).strip() or exc.__class__.__name__
-        lowered = error_text.lower()
+        provider_error_code = BaseProvider._extract_error_code(exc)
+        diagnostic_cause = BaseProvider._classify_diagnostic_cause(exc, status_code, provider_error_code)
+        provider_error_type = re.sub(r"[^A-Za-z0-9_.]", "", exc.__class__.__name__)[:80] or "unknown"
+        diagnostic_parts = [f"cause={diagnostic_cause}", f"exception={provider_error_type}"]
+        if status_code is not None:
+            diagnostic_parts.append(f"http_status={status_code}")
+        if provider_error_code is not None:
+            diagnostic_parts.append(f"provider_code={provider_error_code}")
+        details = {
+            "status_code": status_code,
+            "provider_error_type": provider_error_type,
+            "provider_error_code": provider_error_code,
+            "diagnostic_cause": diagnostic_cause,
+        }
+        suffix = "; ".join(diagnostic_parts)
 
-        if status_code == 429 or status_code == "429" or status_code in {"rate_limit_exceeded", "rate-limit-exceeded"}:
-            return LLMRateLimitError(f"{provider_name} request was rate limited.", status_code=status_code)
-        if "rate limit" in lowered or "too many requests" in lowered or "quota exceeded" in lowered:
-            return LLMRateLimitError(f"{provider_name} request was rate limited.", status_code=status_code)
-
-        if status_code in {408, 504} or status_code in {"408", "504", "timeout", "timed_out", "deadline_exceeded"}:
-            return LLMTimeoutError(f"{provider_name} request timed out.", status_code=status_code)
-        if any(token in lowered for token in ("timed out", "timeout", "deadline exceeded", "time out")):
-            return LLMTimeoutError(f"{provider_name} request timed out.", status_code=status_code)
-
-        return ProviderRequestError(f"{provider_name} request failed.", status_code=status_code, retryable=False)
+        if diagnostic_cause == "rate_limit_or_quota":
+            return LLMRateLimitError(f"{provider_name} request was rate limited ({suffix}).", **details)
+        if diagnostic_cause == "timeout":
+            return LLMTimeoutError(f"{provider_name} request timed out ({suffix}).", **details)
+        return ProviderRequestError(f"{provider_name} request failed ({suffix}).", retryable=False, **details)
 
     def _coerce_structured_output(self, payload: Any) -> dict[str, Any] | str:
         if payload is None:

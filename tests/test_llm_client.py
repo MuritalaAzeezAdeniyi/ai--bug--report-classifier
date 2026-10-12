@@ -4,6 +4,7 @@ from types import SimpleNamespace
 import pytest
 
 from app.llm_client import (
+    BaseProvider,
     LLMClient,
     LLMClientConfig,
     LLMRateLimitError,
@@ -152,8 +153,11 @@ def test_gemini_provider_translates_request_failure(monkeypatch):
     monkeypatch.setitem(sys.modules, "google.genai", fake_google_module)
 
     provider = LLMClient(LLMClientConfig(provider="gemini", model="gemini-2.5-flash", api_key="abc"))._provider
-    with pytest.raises(ProviderRequestError):
+    with pytest.raises(ProviderRequestError) as excinfo:
         provider.generate("hello")
+    assert excinfo.value.diagnostic_cause == "unknown"
+    assert excinfo.value.provider_error_type == "RuntimeError"
+    assert "gemini exploded" not in str(excinfo.value)
 
 
 def test_openai_provider_translates_request_failure(monkeypatch):
@@ -190,6 +194,50 @@ def test_gemini_provider_translates_timeout_error(monkeypatch):
     provider = LLMClient(LLMClientConfig(provider="gemini", model="gemini-2.5-flash", api_key="abc"))._provider
     with pytest.raises(LLMTimeoutError):
         provider.generate("hello")
+
+
+@pytest.mark.parametrize(
+    ("status_code", "provider_code", "expected_cause", "expected_error_type"),
+    [
+        (401, "UNAUTHENTICATED", "authentication", ProviderRequestError),
+        (429, "RESOURCE_EXHAUSTED", "rate_limit_or_quota", LLMRateLimitError),
+        (404, "MODEL_NOT_FOUND", "model_not_found", ProviderRequestError),
+        (504, "DEADLINE_EXCEEDED", "timeout", LLMTimeoutError),
+    ],
+)
+def test_provider_errors_preserve_safe_structured_diagnostics(
+    status_code, provider_code, expected_cause, expected_error_type
+):
+    class SDKError(Exception):
+        pass
+
+    error = SDKError("private request payload api_key=secret-value")
+    error.status_code = status_code
+    error.status = provider_code
+
+    translated = BaseProvider._coerce_provider_error("Gemini", error)
+
+    assert isinstance(translated, expected_error_type)
+    assert translated.diagnostic_cause == expected_cause
+    assert translated.provider_error_type == "SDKError"
+    assert translated.provider_error_code == provider_code
+    assert translated.status_code == status_code
+    assert "secret-value" not in str(translated)
+    assert "private request payload" not in str(translated)
+
+
+def test_provider_error_without_structured_cause_is_reported_as_unknown():
+    class UnknownSDKError(Exception):
+        pass
+
+    translated = BaseProvider._coerce_provider_error(
+        "Gemini", UnknownSDKError("message mentions quota but has no structured code")
+    )
+
+    assert translated.diagnostic_cause == "unknown"
+    assert translated.provider_error_type == "UnknownSDKError"
+    assert translated.provider_error_code is None
+    assert "message mentions quota" not in str(translated)
 
 
 def test_openai_provider_translates_rate_limit_error(monkeypatch):

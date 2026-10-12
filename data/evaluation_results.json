@@ -1,0 +1,62 @@
+{
+  "attempted_cases": 2,
+  "case_results": [
+    {
+      "dataset_index": 0,
+      "error_diagnostics": null,
+      "error_message": null,
+      "failure_category": null,
+      "id": "CASE-100",
+      "metrics": {
+        "category_accuracy": 1.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 1.0,
+        "priority_accuracy": 1.0,
+        "reproduction_accuracy": 1.0,
+        "schema_compliance": 1.0,
+        "severity_accuracy": 1.0
+      },
+      "status": "success"
+    },
+    {
+      "dataset_index": 1,
+      "error_diagnostics": null,
+      "error_message": "'No canned response for: broken'",
+      "failure_category": "PROVIDER_ERROR",
+      "id": "CASE-200",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    }
+  ],
+  "category_accuracy": 1.0,
+  "dataset_case_count": 2,
+  "evaluation_complete": false,
+  "failed_cases": 1,
+  "failure_counts": {
+    "AMBIGUOUS_REPORT": 0,
+    "INVALID_SCHEMA": 0,
+    "LLM_TIMEOUT": 0,
+    "LOW_CONFIDENCE": 0,
+    "MISSING_INFORMATION": 0,
+    "PROVIDER_ERROR": 1,
+    "RATE_LIMITED": 0
+  },
+  "human_review_routing_accuracy": null,
+  "human_review_routing_rate": 0.0,
+  "incomplete": true,
+  "output_path": "C:\\Users\\DELL\\ai--bug--report-classifier\\data\\evaluation_results.json",
+  "overall_classification_accuracy": 1.0,
+  "priority_accuracy": 1.0,
+  "reproduction_accuracy": 1.0,
+  "schema_compliance_rate": 1.0,
+  "severity_accuracy": 1.0,
+  "successful_classifications": 1
+}

@@ -240,6 +240,63 @@ This project uses AI coding assistance during development. Each bounded task is 
 - Exact test result: 97 passed in 8.99s
 - Result: completed within the deterministic human-review routing scope only.
 
+## Step 15 — Evaluation Execution and Metrics
+
+- AI tool used: coding agent
+- Task: add a reproducible evaluation runner, validate the dataset-driven evaluation flow, and document the current results without claiming a live LLM evaluation.
+- Files created/modified:
+  - `scripts/run_evaluation.py`
+  - `scripts/__init__.py`
+  - `tests/test_evaluation_runner.py`
+  - `docs/results-report.md`
+  - `docs/failure-analysis.md`
+  - `AI_USAGE_LOG.md`
+- What was implemented: a dataset-validation layer, a classifier-driven evaluation runner, per-case result tracking, canonical failure categorization, deterministic test coverage for metric calculations and partial failure handling, and JSON output generation without exposing secrets or provider configuration details.
+- Metric coverage: dataset count, attempted/successful/failed case counts, schema compliance, category accuracy, severity accuracy, priority accuracy, reproduction-availability accuracy, overall classification accuracy, human-review routing rate, human-review routing accuracy when explicit ground-truth review values are supplied, and failure counts keyed to the canonical `FailureCategory` values.
+- Evaluation behavior: failed or invalid cases are explicitly counted as failures and are not silently converted into correct predictions. Successful results keep their dataset ID and per-case metrics for later analysis.
+- Output behavior: JSON output is written to a configurable path, and the CLI summary makes partial or incomplete evaluations explicit. No API keys or secrets are printed.
+- Limitation: no live LLM evaluation was run during this implementation. The runner is ready for a real provider-backed evaluation, but the actual model metrics remain pending until the user executes it separately with the configured environment.
+- Tests performed: `python -m pytest -q`
+- Exact test result: 102 passed in 7.37s
+- Result: completed within the evaluation-runner scope only.
+
 ## Future AI-Assisted Tasks
 
 Subsequent AI-assisted tasks will be appended to this log as they are completed.
+
+## Step 15A — Local Evaluation `.env` Loading
+
+- AI tool used: coding agent
+- Task: load the repository-root `.env` for local evaluation runs while preserving explicit process environment and CLI overrides.
+- Files modified:
+  - `requirements.txt`
+  - `scripts/run_evaluation.py`
+  - `tests/test_evaluation_runner.py`
+  - `AI_USAGE_LOG.md`
+- What was implemented: added `python-dotenv` and a runner helper that resolves `.env` from the script-derived repository root, calls `load_dotenv(..., override=False)`, then snapshots `os.environ` before applying existing CLI overrides.
+- Tests added: verify repository-root path resolution, dotenv loading without replacing an explicitly set environment value, and CLI provider/model precedence over dotenv values using test-only credentials and a mocked classifier. No network calls are made by these tests.
+- Security: no `.env` contents or secret values are printed or written to the usage log.
+- Tests performed: `python -m pytest -q`
+- Exact test result: 105 passed in 5.80s
+- Targeted `git diff --check`: passed for `requirements.txt`, `scripts/run_evaluation.py`, `tests/test_evaluation_runner.py`, and `AI_USAGE_LOG.md`.
+- Live evaluation: not run.
+
+## Step 16 — Safe Provider Error Diagnostics
+
+- AI tool used: coding agent
+- Task: investigate generic Gemini provider failures and retain safe structured diagnostics without changing failure categories or retry behavior.
+- Files modified:
+  - `app/llm_client.py`
+  - `app/bug_service.py`
+  - `scripts/run_evaluation.py`
+  - `tests/test_llm_client.py`
+  - `tests/test_bug_service.py`
+  - `tests/test_evaluation_runner.py`
+  - `docs/failure-analysis.md`
+  - `AI_USAGE_LOG.md`
+- Root cause: the provider adapter replaced most SDK exception content with a fixed generic message, while the service wrapper and evaluation output retained only the exception string. Structured status/code fields were not consistently preserved through those layers.
+- What was implemented: adapter-level extraction of numeric HTTP status, allowlisted structured provider codes, exception class name, and conservative cause; propagation through `ClientFailureError`; and serialization as per-case `error_diagnostics` in evaluation output. Raw SDK exception text and response/request content are not included in these new diagnostics.
+- Classification and retries: existing `LLMTimeoutError`, `LLMRateLimitError`, `PROVIDER_ERROR`, and retry behavior remain in place. Explicit authentication, rate-limit/quota, timeout, and model-not-found codes are distinguishable; insufficient structured information yields `unknown`.
+- Tests performed: `python -m pytest -q`
+- Exact test result: 112 passed in 7.70s
+- Live evaluation: not run; no live API calls were made.

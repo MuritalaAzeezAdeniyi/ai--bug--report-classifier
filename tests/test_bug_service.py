@@ -13,7 +13,7 @@ from app.bug_service import (
     TransientClientError,
 )
 from app.evaluator import FAILURE_CATEGORIES, FailureCategory
-from app.llm_client import LLMRateLimitError, LLMTimeoutError
+from app.llm_client import LLMRateLimitError, LLMTimeoutError, ProviderRequestError
 from app.prompts import build_developer_prompt, build_system_prompt, build_user_prompt
 from app.schemas import BugReport
 
@@ -250,6 +250,31 @@ def test_explicit_rate_limit_error_maps_to_rate_limited_category():
         classifier.classify("Rate limited")
 
     assert excinfo.value.category == FailureCategory.RATE_LIMITED
+
+
+def test_provider_diagnostics_survive_service_error_wrapping():
+    class DiagnosticClient:
+        def generate(self, *args, **kwargs):
+            raise ProviderRequestError(
+                "Gemini request failed (cause=authentication; exception=SDKError; http_status=401).",
+                status_code=401,
+                provider_error_type="SDKError",
+                provider_error_code="UNAUTHENTICATED",
+                diagnostic_cause="authentication",
+            )
+
+    classifier = BugReportClassifier(DiagnosticClient())
+
+    with pytest.raises(ClientFailureError) as excinfo:
+        classifier.classify("Provider issue")
+
+    assert excinfo.value.category == FailureCategory.PROVIDER_ERROR
+    assert excinfo.value.diagnostics == {
+        "provider_error_type": "SDKError",
+        "http_status_code": 401,
+        "provider_error_code": "UNAUTHENTICATED",
+        "diagnostic_cause": "authentication",
+    }
 
 
 def test_unknown_client_failure_maps_to_provider_error_category():
