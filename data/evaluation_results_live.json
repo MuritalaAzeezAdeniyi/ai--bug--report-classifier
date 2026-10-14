@@ -1,0 +1,683 @@
+{
+  "attempted_cases": 30,
+  "case_results": [
+    {
+      "dataset_index": 0,
+      "error_diagnostics": null,
+      "error_message": null,
+      "failure_category": null,
+      "id": "BUG-001",
+      "metrics": {
+        "category_accuracy": 1.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 1.0,
+        "priority_accuracy": 1.0,
+        "reproduction_accuracy": 1.0,
+        "schema_compliance": 1.0,
+        "severity_accuracy": 1.0
+      },
+      "status": "success"
+    },
+    {
+      "dataset_index": 1,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-002",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 2,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-003",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 3,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-004",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 4,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-005",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 5,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-006",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 6,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-007",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 7,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-008",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 8,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-009",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 9,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-010",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 10,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-011",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 11,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-012",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 12,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-013",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 13,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-014",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 14,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-015",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 15,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-016",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 16,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-017",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 17,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-018",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 18,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-019",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 19,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-020",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 20,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-021",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 21,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-022",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 22,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-023",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 23,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-024",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 24,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-025",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 25,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-026",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 26,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-027",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 27,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-028",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 28,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-029",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    },
+    {
+      "dataset_index": 29,
+      "error_diagnostics": {
+        "diagnostic_cause": "rate_limit_or_quota",
+        "http_status_code": 429,
+        "provider_error_code": "RESOURCE_EXHAUSTED",
+        "provider_error_type": "ClientError"
+      },
+      "error_message": "LLM client failed after 3 attempts: Gemini request was rate limited (cause=rate_limit_or_quota; exception=ClientError; http_status=429; provider_code=RESOURCE_EXHAUSTED).",
+      "failure_category": "RATE_LIMITED",
+      "id": "BUG-030",
+      "metrics": {
+        "category_accuracy": 0.0,
+        "human_review_routing_accuracy": null,
+        "overall_classification_accuracy": 0.0,
+        "priority_accuracy": 0.0,
+        "reproduction_accuracy": 0.0,
+        "schema_compliance": 0.0,
+        "severity_accuracy": 0.0
+      },
+      "status": "failure"
+    }
+  ],
+  "category_accuracy": 1.0,
+  "dataset_case_count": 30,
+  "evaluation_complete": false,
+  "failed_cases": 29,
+  "failure_counts": {
+    "AMBIGUOUS_REPORT": 0,
+    "INVALID_SCHEMA": 0,
+    "LLM_TIMEOUT": 0,
+    "LOW_CONFIDENCE": 0,
+    "MISSING_INFORMATION": 0,
+    "PROVIDER_ERROR": 0,
+    "RATE_LIMITED": 29
+  },
+  "human_review_routing_accuracy": null,
+  "human_review_routing_rate": 0.0,
+  "incomplete": true,
+  "output_path": "data\\evaluation_results_live.json",
+  "overall_classification_accuracy": 1.0,
+  "priority_accuracy": 1.0,
+  "reproduction_accuracy": 1.0,
+  "schema_compliance_rate": 1.0,
+  "severity_accuracy": 1.0,
+  "successful_classifications": 1
+}

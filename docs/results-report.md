@@ -2,44 +2,35 @@
 
 ## Scope
 
-This report covers the deterministic evaluation runner added for Step 15. It does not claim a real LLM evaluation has been executed. The automated suite verifies the runner logic using deterministic fake classifications and synthetic results only.
+This report separates deterministic automated-test evidence from the saved live-provider evaluation. Synthetic test fixtures are not model-performance results.
 
-## Current status
+## Automated tests
 
-- Synthetic validation: completed via unit tests
-- Live LLM evaluation: not run in this implementation
-- Dataset in use: `data/eval_dataset.json`
+The evaluation-runner tests use deterministic fake classifiers to check metric calculation, per-case association, failure counting, partial-run status, and JSON output. They do not establish real model quality.
 
-## Automated-test metrics
+## Saved live evaluation
 
-The automated evaluation runner is tested against known prediction fixtures. These are not model outputs and must not be interpreted as live classification performance.
+The saved run in `data/evaluation_results_live.json` used the 30 cases in `data/eval_dataset.json` and records:
 
-Supported metrics produced by the runner:
+- Dataset cases: 30
+- Cases attempted: 30
+- Successful classifications: 1
+- Failed cases: 29
+- Failure categories: `RATE_LIMITED` for all 29 failures
+- Recorded provider diagnostics: HTTP 429, provider code `RESOURCE_EXHAUSTED`
+- `evaluation_complete`: `false`
+- `incomplete`: `true`
 
-- dataset case count
-- attempted cases
-- successful classifications
-- failed cases
-- schema compliance rate
-- category accuracy
-- severity accuracy
-- priority accuracy
-- reproduction-availability accuracy
-- overall classification accuracy
-- human-review routing rate
-- human-review routing accuracy when explicit ground-truth review values are supplied
-- failure counts by the canonical FailureCategory values
+The saved aggregate fields report 1.0 for schema compliance and classification accuracy metrics. These values are based on the one successful classification only; the failed provider requests are recorded separately and do not count as classification mismatches in those aggregates. With just one successful case, these scores are not representative of the 30-case dataset and must not be presented as full-dataset performance.
 
-## Real evaluation run
+The saved result demonstrates one successful classification and 29 rate-limited failures. It does not establish overall model quality or a completed evaluation.
 
-To execute a real model evaluation later, use the runner script from the repository root:
+## Re-running the evaluation
 
-```bash
-python scripts/run_evaluation.py --dataset data/eval_dataset.json --output data/evaluation_results.json
+After confirming provider availability and quota, run the evaluation from the repository root:
+
+```powershell
+python -m scripts.run_evaluation --dataset data/eval_dataset.json --output data/evaluation_results_live.json
 ```
 
-The runner expects provider configuration via environment variables `LLM_PROVIDER`, `LLM_MODEL`, and `LLM_API_KEY` unless they are overridden on the command line. It writes JSON output for later analysis without printing secrets or full environment configuration.
-
-## Important limitation
-
-No live LLM evaluation metrics are included in this report because no real provider call was made during the implementation step.
+Provider configuration is read from the process environment or the repository-root `.env` file. Review the output's `evaluation_complete` and `incomplete` fields, case counts, and failure categories before interpreting any metrics.

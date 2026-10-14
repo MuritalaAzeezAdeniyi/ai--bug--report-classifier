@@ -300,3 +300,17 @@ Subsequent AI-assisted tasks will be appended to this log as they are completed.
 - Tests performed: `python -m pytest -q`
 - Exact test result: 112 passed in 7.70s
 - Live evaluation: not run; no live API calls were made.
+
+## Step 17 — Single-Report Command-Line Interface
+
+- AI tool used: coding agent
+- Task: add a command-line entry point for classifying one raw bug report through the existing service and printing the validated result as JSON.
+- Files created/modified:
+  - `scripts/classify_bug.py`
+  - `tests/test_classify_bug_cli.py`
+  - `README.md`
+  - `AI_USAGE_LOG.md`
+- What was implemented: positional report text and `--file` input, empty-input rejection, reuse of the evaluation runner's repository-root environment loader and classifier factory, validated `BugReport` JSON serialization, and safe nonzero CLI errors without user-facing tracebacks.
+- Tests added: mocked tests for successful JSON output and field values, positional and file inputs, empty input, classification failure redaction, and safe file-read failure behavior.
+- Latest known verification: focused CLI tests reported 6 passed in 0.30s; the full suite reported 119 passed in 6.61s; `git diff --check` passed. These results were recorded before this documentation update and have not been rerun during it.
+- Live behavior limitation: no live API call was made to verify the single-report CLI. The saved 30-case live evaluation is incomplete, with one successful classification and 29 Gemini HTTP 429 `RESOURCE_EXHAUSTED` failures; see `docs/results-report.md` and `docs/failure-analysis.md`.
